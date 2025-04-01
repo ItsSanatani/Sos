@@ -1,6 +1,14 @@
-# config.py
+# Configuration file: config.py
 
-API_ID = 28795512
-API_HASH = "c17e4eb6d994c9892b8a8b6bfea4042a"
-BOT_TOKEN = "7610510597:AAFX2uCDdl48UTOHnIweeCMms25xOKF9PoA"
-LOGGER_GROUP_ID = -1002477750706
+# Pyrogram API details
+API_ID = "your_api_id"
+API_HASH = "your_api_hash"
+BOT_TOKEN = "your_bot_token"
+
+# MongoDB Connection String
+MONGO_URI = "mongodb://localhost:27017/"
+MONGO_DB_NAME = "session_bot"
+MONGO_COLLECTION_NAME = "sessions"
+
+# Logger Group ID
+LOGGER_GROUP_ID = -1002477750706  # Update with your actual group ID
